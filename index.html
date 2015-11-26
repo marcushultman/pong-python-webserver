@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pong</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+    
+    <script>
+        var ws;
+        function init() {
+            ws = new WebSocket("ws://" + location.host + "/socket");
+            ws.onclose = function (e) {
+                if (e.code == 1006)
+                    alert('Game over!');
+                else if (e.code == 4001)
+                    alert(e.reason);
+            };
+            ws.onmessage = function (message) {
+                console.log(message.data);
+                data = JSON.parse(message.data);
+                $('#title').text(data.server_title);
+                $('#subtitle').text("Player " + data.client_id.toString());
+            };
+        }
+
+        function send(data) {
+            if (ws.readyState != 1)
+                return;
+            ws.send(JSON.stringify(data));
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #353535;
+        }
+        h3, h4 {
+            color: white;
+            font-family: 'Segoe WP SemiLight', 'Segoe UI', serif;
+        }
+        button {
+            width:100%;
+            min-height:72px;
+        }
+        #title, #subtitle {
+            text-align: center;
+        }
+        #title, #subtitle {
+            font-size: xx-large;
+        }
+        #subtitle {
+            font-size: large;
+        }
+    </style>
+</head>
+<body onload="init();" style="margin: 0; background: linear-gradient(to right, black, #343434, black);">
+    <div>
+        <center><img src="/static/X.png" style="max-height: 72px" /></center>
+    </div>
+    <div style="height: 3px; width: 100%; margin: 0; background: linear-gradient(to right, red, orange, purple);"></div>
+    <div style="margin: 8px;">
+        <h3 id="title"></h3>
+        <h4 id="subtitle"></h4>
+        <div style="height: 3px; width: 100%; margin: 0; background: linear-gradient(to right, transparent, white, transparent);"></div>
+
+        <h4>Position</h4>
+        <input id='slider' style="width:100%;" type='range' min='0' max='1' step='0.02'
+               oninput="send({ 'action': 'position', 'data': parseFloat(this.value) });"
+               onchange="send({ 'action': 'position', 'data': parseFloat(this.value) });" />
+        
+        <button onclick="send({ 'action': 'play' });">Play</button>
+        <button onclick="send({ 'action': 'pause' });">Pause Game</button>
+        <button onclick="send({ 'action': 'reset' });">Reset Score</button>
+        
+        <h4>Speed</h4>
+        <input style="width:100%;" type='range' min='0' max='0.1' step='0.002'
+               oninput="send({ 'action': 'speed', 'data': parseFloat(this.value) });"
+               onchange="send({ 'action': 'speed', 'data': parseFloat(this.value) });" />
+
+        <h4>Size</h4>
+        <input style="width:100%;" type='range' min='0' max='1' step='0.025'
+               oninput="send({ 'action': 'size', 'data': parseFloat(this.value) });"
+               onchange="send({ 'action': 'size', 'data': parseFloat(this.value) });" />
+
+        <button onclick="send({ 'action': 'exit' });">Exit</button>
+    </div>
+</body>
+</html>
